@@ -13,6 +13,7 @@ dependencies = [
     "mcp[cli]>=1.4.1",
     "fastmcp>=0.4.0",
     "python-dotenv>=1.0.0",
+    "canvasapi>=3.0.0",
 ]
 
 [project.scripts]
@@ -29,3 +30,9 @@ where = ["."]
 target-version = "py311"
 line-length = 100
 select = ["E", "F", "I", "N", "W", "D"]
+
+[project.optional-dependencies]
+pdf = [
+    "PyPDF2>=3.0.0",
+    "pdfplumber>=0.10.0",
+]
