@@ -39,6 +39,8 @@ from tools.search import search_course, search_all_courses
 from tools.utils import format_course_summary, clear_cache
 from tools.canvas_client import check_auth
 from tools.file_content import get_file_content
+from tools.todos import get_todo_items, get_upcoming_todo_items
+from tools.quizzes import get_course_quizzes, get_all_quizzes, get_quiz_details
 
 # Register course tools
 mcp.tool()(get_courses)
@@ -65,6 +67,13 @@ mcp.tool()(clear_cache)
 
 # Register file content tool
 mcp.tool()(get_file_content)
+
+# Register todo and quiz tools
+mcp.tool()(get_todo_items)
+mcp.tool()(get_upcoming_todo_items)
+mcp.tool()(get_course_quizzes)
+mcp.tool()(get_all_quizzes)
+mcp.tool()(get_quiz_details)
 
 # Authentication tools
 mcp.tool()(check_auth)  # Using check_auth from canvas_client

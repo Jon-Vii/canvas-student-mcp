@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import all tools to make them available through the package
-from . import canvas_client, courses, assignments, content, search, utils, file_content
+from . import canvas_client, courses, assignments, content, search, utils, file_content, todos, quizzes
 
 # For backward compatibility - avoid importing directly
 from .courses import get_courses, find_course_by_name, get_course_details
@@ -20,4 +20,6 @@ from .content import get_course_files, get_course_modules, get_module_items, get
 from .search import search_course, search_all_courses
 from .utils import format_course_summary, clear_cache
 from .canvas_client import check_auth
-from .file_content import get_file_content 
+from .file_content import get_file_content
+from .todos import get_todo_items, get_upcoming_todo_items
+from .quizzes import get_course_quizzes, get_all_quizzes, get_quiz_details 

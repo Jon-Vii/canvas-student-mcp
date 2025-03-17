@@ -1,6 +1,8 @@
 # Canvas Student MCP
 
-A Model Context Protocol (MCP) integration for interacting with Canvas LMS.
+A Model Context Protocol (MCP) integration for interacting with Canvas LMS. This repository was created as a test of how to interface Canvas with LLM clients through the MCP standard. It was "vibe-coded" (made with Cursor) during a single evening as an exploration of the MCP capabilities.
+
+> **Note on PDF Handling**: Unfortunately, there's a limitation regarding PDF parsing seemingly due to restrictions on Claude's internet access. A complete solution would require an additional API service for text extraction from PDFs, which wasn't implemented in this project. The current implementation provides links to PDFs but cannot fully extract and display their content within Claude.
 
 ## Setup
 
@@ -199,9 +201,15 @@ Here are some things you can ask Claude:
 - "What assignments are due in the next week?"
 - "Search for content about 'machine learning' across all my courses"
 - "Extract and show me the content of Lab1P.pdf from course 27849"
+- "Show me my to-do items and missing assignments"
+- "What quizzes do I have coming up in my courses?"
+- "Show me the details for quiz 12345 in course 67890"
+- "What assignments are due in the next 14 days?"
 
 ### Recent Changes
 
+- **New Feature: To-Do Items and Missing Assignments**: The `get_todo_items()` and `get_upcoming_todo_items()` tools allow students to view their Canvas to-do list and track missing or upcoming assignments.
+- **New Feature: Quiz Information**: The `get_course_quizzes()`, `get_all_quizzes()`, and `get_quiz_details()` tools provide comprehensive information about quizzes across all courses, helping students prepare and manage their assessments.
 - **Tool Deprecation**: The `find_course_by_name` tool has been deprecated to reduce redundancy. Use `get_courses` instead and filter the results as needed. This change simplifies the API and improves maintainability.
 
 ## Project Structure
@@ -215,6 +223,8 @@ Here are some things you can ask Claude:
   - `search.py`: Search tools
   - `utils.py`: Helper utility tools
   - `file_content.py`: PDF and text content extraction
+  - `todos.py`: To-do items and missing assignments tools
+  - `quizzes.py`: Quiz information and preparation tools
 
 ## License
 
