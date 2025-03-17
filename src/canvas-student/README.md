@@ -1,6 +1,6 @@
 # Canvas Student MCP
 
-A Model Context Protocol (MCP) integration for interacting with Canvas LMS. This repository was created as a test of how to interface Canvas with LLM clients through the MCP standard. It was "vibe-coded" (made with Cursor) during a single evening as an exploration of the MCP capabilities.
+A Model Context Protocol (MCP) integration for interacting with Canvas LMS. This repository was created as a test of how to interface Canvas with LLM clients through the MCP standard. It was "vibe-coded" (made with Cursor) during an evening as an exploration of the MCP capabilities and Canvas API for students.
 
 > **Note on PDF Handling**: Unfortunately, there's a limitation regarding PDF parsing seemingly due to restrictions on Claude's internet access. A complete solution would require an additional API service for text extraction from PDFs, which wasn't implemented in this project. The current implementation provides links to PDFs but cannot fully extract and display their content within Claude.
 
