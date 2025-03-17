@@ -2,20 +2,28 @@
 from datetime import datetime
 import time
 from functools import wraps
+import logging
+from typing import Any, Callable, Dict
 
-# Import from parent directory
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Get logger
+logger = logging.getLogger(__name__)
+
 from tools.api_client import make_canvas_request
 
 # Cache management
-cache = {}
-cache_ttl = {}
+cache: Dict[str, Any] = {}
+cache_ttl: Dict[str, float] = {}
 
-def cached(ttl=300):
-    """Decorator to cache function results."""
-    def decorator(func):
+def cached(ttl: int = 300):
+    """Decorator to cache function results.
+    
+    Args:
+        ttl: Time-to-live in seconds for cached entries
+        
+    Returns:
+        Decorated function that uses caching
+    """
+    def decorator(func: Callable):
         @wraps(func)
         async def wrapper(*args, **kwargs):
             # Create a cache key from function name and arguments
@@ -23,9 +31,11 @@ def cached(ttl=300):
             
             # Check if cached and not expired
             if key in cache and time.time() < cache_ttl.get(key, 0):
+                logger.debug(f"Cache hit for {key}")
                 return cache[key]
             
             # Execute function and cache result
+            logger.debug(f"Cache miss for {key}, executing function")
             result = await func(*args, **kwargs)
             cache[key] = result
             cache_ttl[key] = time.time() + ttl
@@ -73,30 +83,5 @@ async def format_course_summary(course_id: int):
         
         return summary
     except Exception as e:
-        return {"error": str(e)}
-
-async def search_all_course_content(search_term: str):
-    """Search across all courses for content matching the search term."""
-    # Get all courses
-    courses = await make_canvas_request("courses", params={"enrollment_state": "active"})
-    results = {}
-    
-    for course in courses:
-        course_id = course["id"]
-        
-        # Search assignments
-        try:
-            assignments = await make_canvas_request(f"courses/{course_id}/assignments")
-            matching_assignments = [a for a in assignments if 
-                                   search_term.lower() in a.get("name", "").lower() or 
-                                   (a.get("description") and search_term.lower() in a.get("description").lower())]
-            if matching_assignments:
-                if course["name"] not in results:
-                    results[course["name"]] = {}
-                results[course["name"]]["assignments"] = matching_assignments
-        except Exception:
-            pass
-            
-        # Additional searches could be added for announcements, pages, discussions, etc.
-            
-    return results 
+        logger.error(f"Error formatting course summary: {e}")
+        return {"error": str(e)} 
