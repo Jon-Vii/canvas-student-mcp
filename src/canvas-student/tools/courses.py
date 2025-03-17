@@ -1,71 +1,81 @@
 """Course-related tools for Canvas MCP."""
 import time
 import httpx
-from functools import wraps
-
-# Import from parent directory - adjust as needed
 import sys
 import os
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Import from parent directory
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from canvas_student import CANVAS_API_TOKEN, CANVAS_BASE_URL, cache, cache_ttl
+from canvas_student import CANVAS_API_TOKEN, CANVAS_BASE_URL
 
-def cached(ttl=300):
-    """Decorator to cache function results."""
-    def decorator(func):
-        @wraps(func)
-        async def wrapper(*args, **kwargs):
-            # Create a cache key from function name and arguments
-            key = f"{func.__name__}:{str(args)}:{str(kwargs)}"
-            
-            # Check if cached and not expired
-            if key in cache and time.time() < cache_ttl.get(key, 0):
-                return cache[key]
-            
-            # Execute function and cache result
-            result = await func(*args, **kwargs)
-            cache[key] = result
-            cache_ttl[key] = time.time() + ttl
-            return result
-        return wrapper
-    return decorator
-
-async def make_canvas_request(endpoint, method="GET", params=None, data=None):
-    """Make a request to the Canvas API."""
-    url = f"{CANVAS_BASE_URL}/api/v1/{endpoint.lstrip('/')}"
-    headers = {"Authorization": f"Bearer {CANVAS_API_TOKEN}"}
-    
-    async with httpx.AsyncClient() as client:
-        response = await client.request(
-            method=method,
-            url=url,
-            headers=headers,
-            params=params,
-            json=data
-        )
-        response.raise_for_status()
-        return response.json()
+# Import cache from utils and API client functions
+from tools.utils import cached
+from tools.api_client import make_canvas_request
 
 @cached()
 async def get_courses():
     """Retrieve all courses the user is enrolled in."""
-    return await make_canvas_request(
+    logger.info("Fetching user courses")
+    
+    result = await make_canvas_request(
         "courses",
         params={"enrollment_state": "active"}
     )
+    
+    # Check if the result is an error
+    if isinstance(result, dict) and "error" in result:
+        logger.error(f"Error retrieving courses: {result}")
+        return {"error": result["error"], "status": result.get("status")}
+    
+    # Check if we got an empty list
+    if result == []:
+        logger.info("No active courses found")
+        return {"courses": [], "message": "No active courses found"}
+    
+    # For successful responses with courses
+    logger.info(f"Successfully retrieved {len(result)} courses")
+    return result
 
 async def find_course_by_name(course_name: str):
     """Find a course by name or partial name match."""
     courses = await get_courses()
+    
+    # Handle error responses from get_courses
+    if isinstance(courses, dict) and "error" in courses:
+        return courses
+    
+    # Check if courses is a dict with 'courses' key (our custom empty result)
+    if isinstance(courses, dict) and "courses" in courses:
+        courses = courses["courses"]
+    
     matches = []
     for course in courses:
         if "name" in course and course_name.lower() in course["name"].lower():
             matches.append(course)
+    
+    if not matches:
+        return {"matches": [], "message": f"No courses found matching '{course_name}'"}
+    
     return matches
 
 @cached()
 async def get_course_details(course_id: int):
     """Get detailed information about a course."""
-    return await make_canvas_request(
+    logger.info(f"Fetching details for course ID: {course_id}")
+    
+    result = await make_canvas_request(
         f"courses/{course_id}",
         params={"include[]": ["term", "total_students"]}
-    ) 
+    )
+    
+    # Check if the result is an error
+    if isinstance(result, dict) and "error" in result:
+        logger.error(f"Error retrieving course details: {result}")
+        return {"error": result["error"], "status": result.get("status")}
+    
+    return result 

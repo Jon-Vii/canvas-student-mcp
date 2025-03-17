@@ -4,7 +4,10 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from tools.courses import make_canvas_request, cached
+
+# Import utilities
+from tools.utils import cached
+from tools.api_client import make_canvas_request
 
 @cached()
 async def get_course_files(course_id: int):
