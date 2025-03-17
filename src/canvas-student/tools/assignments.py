@@ -1,21 +1,21 @@
 """Assignment-related tools for Canvas MCP."""
 from datetime import datetime, timedelta
+import logging
+from typing import List, Dict, Any, Union
 
-# Import from parent directory
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Get logger
+logger = logging.getLogger(__name__)
 
 # Import utilities
 from tools.utils import cached
 from tools.api_client import make_canvas_request
 
 @cached()
-async def get_course_assignments(course_id: int):
+async def get_course_assignments(course_id: int) -> List[Dict[str, Any]]:
     """Get all assignments for a specific course."""
     return await make_canvas_request(f"courses/{course_id}/assignments")
 
-async def find_exams_in_course(course_id: int):
+async def find_exams_in_course(course_id: int) -> List[Dict[str, Any]]:
     """Find assignments that are likely exams in a course."""
     assignments = await get_course_assignments(course_id)
     
@@ -39,7 +39,7 @@ async def find_exams_in_course(course_id: int):
             
     return exams
 
-async def get_upcoming_deadlines(days: int = 7):
+async def get_upcoming_deadlines(days: int = 7) -> List[Dict[str, Any]]:
     """Get all assignments due in the next X days across all courses."""
     from tools.courses import get_courses
     
@@ -62,7 +62,8 @@ async def get_upcoming_deadlines(days: int = 7):
                             "due_date": assignment["due_at"],
                             "points_possible": assignment.get("points_possible")
                         })
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error processing assignments for course {course_id}: {e}")
             pass
             
     return sorted(upcoming, key=lambda x: x["due_date"]) 

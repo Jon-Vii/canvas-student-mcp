@@ -1,9 +1,9 @@
 """Search-related tools for Canvas MCP."""
+import logging
+from typing import Dict, List, Any, Union
 
-# Import from parent directory
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Get logger
+logger = logging.getLogger(__name__)
 
 # Import utilities
 from tools.utils import cached
@@ -12,8 +12,9 @@ from tools.courses import get_courses
 from tools.assignments import get_course_assignments
 from tools.content import get_course_pages, get_course_files, get_course_announcements
 
-async def search_course(course_id: int, search_term: str):
+async def search_course(course_id: int, search_term: str) -> Dict[str, Any]:
     """Search for content within a specific course."""
+    logger.info(f"Searching course {course_id} for '{search_term}'")
     results = {"course_id": course_id, "results": {}}
     
     # Search assignments
@@ -24,7 +25,9 @@ async def search_course(course_id: int, search_term: str):
                               (a.get("description") and search_term.lower() in a.get("description").lower())]
         if matching_assignments:
             results["results"]["assignments"] = matching_assignments
-    except Exception:
+            logger.info(f"Found {len(matching_assignments)} matching assignments")
+    except Exception as e:
+        logger.error(f"Error searching assignments: {e}")
         pass
     
     # Search pages
@@ -35,7 +38,9 @@ async def search_course(course_id: int, search_term: str):
                         (p.get("body") and search_term.lower() in p.get("body").lower())]
         if matching_pages:
             results["results"]["pages"] = matching_pages
-    except Exception:
+            logger.info(f"Found {len(matching_pages)} matching pages")
+    except Exception as e:
+        logger.error(f"Error searching pages: {e}")
         pass
     
     # Search files
@@ -45,7 +50,9 @@ async def search_course(course_id: int, search_term: str):
                          search_term.lower() in f.get("display_name", "").lower()]
         if matching_files:
             results["results"]["files"] = matching_files
-    except Exception:
+            logger.info(f"Found {len(matching_files)} matching files")
+    except Exception as e:
+        logger.error(f"Error searching files: {e}")
         pass
     
     # Search announcements
@@ -56,13 +63,16 @@ async def search_course(course_id: int, search_term: str):
                                 (a.get("message") and search_term.lower() in a.get("message").lower())]
         if matching_announcements:
             results["results"]["announcements"] = matching_announcements
-    except Exception:
+            logger.info(f"Found {len(matching_announcements)} matching announcements")
+    except Exception as e:
+        logger.error(f"Error searching announcements: {e}")
         pass
     
     return results
 
-async def search_all_courses(search_term: str):
+async def search_all_courses(search_term: str) -> Dict[str, Dict[str, Any]]:
     """Search across all courses for the specified term."""
+    logger.info(f"Searching all courses for '{search_term}'")
     courses = await get_courses()
     all_results = {}
     
@@ -72,4 +82,5 @@ async def search_all_courses(search_term: str):
         if course_results["results"]:
             all_results[course["name"]] = course_results["results"]
     
+    logger.info(f"Found matches in {len(all_results)} courses")
     return all_results 
