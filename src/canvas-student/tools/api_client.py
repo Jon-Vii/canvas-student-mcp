@@ -1,19 +1,32 @@
 """API client functions for Canvas interactions."""
 import httpx
-import sys
 import os
 import logging
+from typing import Dict, Any, Optional, Union, List
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Get logger from __init__.py
 logger = logging.getLogger(__name__)
 
-# Import from parent directory
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Import canvas_student module
 from canvas_student import CANVAS_API_TOKEN, CANVAS_BASE_URL
 
-async def make_canvas_request(endpoint, method="GET", params=None, data=None):
-    """Make a request to the Canvas API."""
+async def make_canvas_request(
+    endpoint: str, 
+    method: str = "GET", 
+    params: Optional[Dict[str, Any]] = None, 
+    data: Optional[Dict[str, Any]] = None
+) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
+    """Make a request to the Canvas API.
+    
+    Args:
+        endpoint: The API endpoint (without the /api/v1 prefix)
+        method: HTTP method (GET, POST, PUT, DELETE)
+        params: Query parameters
+        data: JSON body data
+        
+    Returns:
+        The response as JSON, or an error dict
+    """
     url = f"{CANVAS_BASE_URL}/api/v1/{endpoint.lstrip('/')}"
     headers = {"Authorization": f"Bearer {CANVAS_API_TOKEN}"}
     

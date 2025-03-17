@@ -1,17 +1,9 @@
 """Course-related tools for Canvas MCP."""
 import time
-import httpx
-import sys
-import os
 import logging
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Get logger from __init__.py
 logger = logging.getLogger(__name__)
-
-# Import from parent directory
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from canvas_student import CANVAS_API_TOKEN, CANVAS_BASE_URL
 
 # Import cache from utils and API client functions
 from tools.utils import cached
