@@ -3,8 +3,11 @@ import os
 import asyncio
 import logging
 from typing import Any, Dict
-import httpx
 from mcp.server.fastmcp import FastMCP
+import dotenv
+
+# Load environment variables from .env file if it exists
+dotenv.load_dotenv()
 
 # Configure logging
 logging.basicConfig(
@@ -29,15 +32,16 @@ REDIRECT_URI = os.environ.get("REDIRECT_URI", "http://localhost:8000/oauth/callb
 # For now we'll continue with the current name
 
 # Import tools - these imports need to match our file structure
-from tools.courses import get_courses, find_course_by_name, get_course_details
+from tools.courses import get_courses, get_course_details
 from tools.assignments import get_course_assignments, find_exams_in_course, get_upcoming_deadlines
 from tools.content import get_course_files, get_course_modules, get_course_pages, get_course_announcements
 from tools.search import search_course, search_all_courses
 from tools.utils import format_course_summary, clear_cache
+from tools.canvas_client import check_auth
+from tools.file_content import get_file_content
 
 # Register course tools
 mcp.tool()(get_courses)
-mcp.tool()(find_course_by_name)
 mcp.tool()(get_course_details)
 
 # Register assignment tools
@@ -59,40 +63,46 @@ mcp.tool()(search_all_courses)
 mcp.tool()(format_course_summary)
 mcp.tool()(clear_cache)
 
+# Register file content tool
+mcp.tool()(get_file_content)
+
 # Authentication tools
-@mcp.tool()
-async def check_auth_status() -> Dict[str, Any]:
-    """Check if the user's authentication token is valid and return expiration info."""
-    logger.info("Checking authentication status")
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.get(
-                f"{CANVAS_BASE_URL}/api/v1/users/self",
-                headers={"Authorization": f"Bearer {CANVAS_API_TOKEN}"}
-            )
-            response.raise_for_status()
-            logger.info("Authentication valid")
-            return {"status": "authenticated", "user": response.json()}
-        except httpx.HTTPStatusError as e:
-            if e.response.status_code == 401:
-                logger.error("Authentication token expired or invalid")
-                return {"status": "token_expired", "message": "Authentication token has expired"}
-            logger.error(f"Authentication error: {e}")
-            return {"status": "error", "message": str(e)}
+mcp.tool()(check_auth)  # Using check_auth from canvas_client
 
 @mcp.tool()
 async def get_auth_url(redirect_uri: str = REDIRECT_URI) -> Dict[str, Any]:
     """Generate OAuth authorization URL for Canvas."""
-    if not CLIENT_ID:
-        logger.error("CLIENT_ID not configured")
-        return {"error": "CLIENT_ID not configured"}
+    # If API token is being used, notify the user
+    if CANVAS_API_TOKEN:
+        logger.info("Currently using API token authentication")
+        return {
+            "status": "info", 
+            "message": "You are already configured to use an API token for authentication. OAuth flow is not necessary.",
+            "using_api_token": True,
+            "url": None
+        }
     
+    # If OAuth is being used but CLIENT_ID is missing
+    if not CLIENT_ID:
+        logger.error("CLIENT_ID not configured for OAuth authentication")
+        return {
+            "error": "CLIENT_ID not configured", 
+            "message": "To use OAuth authentication, you must set CANVAS_CLIENT_ID in your environment or .env file.",
+            "using_api_token": False
+        }
+    
+    # Generate OAuth URL
     auth_url = (f"{CANVAS_BASE_URL}/login/oauth2/auth"
                 f"?client_id={CLIENT_ID}&response_type=code"
                 f"&redirect_uri={redirect_uri}&state=canvas-mcp")
     
-    logger.info(f"Generated auth URL for redirect_uri: {redirect_uri}")
-    return {"auth_url": auth_url}
+    logger.info(f"Generated OAuth auth URL for redirect_uri: {redirect_uri}")
+    return {
+        "status": "success",
+        "auth_url": auth_url,
+        "using_api_token": False,
+        "message": "Use this URL to authorize Canvas access through OAuth"
+    }
 
 # For backwards compatibility with scripts that use this module directly
 if __name__ == "__main__":
