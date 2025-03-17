@@ -1,10 +1,31 @@
 [project]
 name = "canvas-student"
 version = "0.1.0"
-description = "Add your description here"
+description = "Canvas Student MCP - Access Canvas LMS through Claude's Model Context Protocol"
 readme = "README.md"
 requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "Canvas Student MCP Contributors" }
+]
 dependencies = [
     "httpx>=0.28.1",
     "mcp[cli]>=1.4.1",
+    "fastmcp>=0.4.0",
+    "python-dotenv>=1.0.0",
 ]
+
+[project.scripts]
+canvas-mcp = "canvas_student.main:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+select = ["E", "F", "I", "N", "W", "D"]
