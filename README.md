@@ -206,12 +206,6 @@ Here are some things you can ask Claude:
 - "Show me the details for quiz 12345 in course 67890"
 - "What assignments are due in the next 14 days?"
 
-### Recent Changes
-
-- **New Feature: To-Do Items and Missing Assignments**: The `get_todo_items()` and `get_upcoming_todo_items()` tools allow students to view their Canvas to-do list and track missing or upcoming assignments.
-- **New Feature: Quiz Information**: The `get_course_quizzes()`, `get_all_quizzes()`, and `get_quiz_details()` tools provide comprehensive information about quizzes across all courses, helping students prepare and manage their assessments.
-- **Tool Deprecation**: The `find_course_by_name` tool has been deprecated to reduce redundancy. Use `get_courses` instead and filter the results as needed. This change simplifies the API and improves maintainability.
-
 ## Project Structure
 
 - `canvas-student.py`: Main MCP server
